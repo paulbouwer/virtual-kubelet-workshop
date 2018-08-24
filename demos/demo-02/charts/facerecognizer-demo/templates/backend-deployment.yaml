@@ -1,0 +1,48 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "fullname" . }}-backend
+  labels:
+    app: {{ template "name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "name" . }}-backend
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: "{{ .Values.backend.image.pullPolicy }}"
+          env:
+          - name: AZURE_BLOB_ACCOUNT
+            value: "{{ .Values.imageRecognizer.azureBlob.storageAccount }}"
+          - name: DB_PATH
+            value: "/app_db/"
+          volumeMounts: 
+          - mountPath: /app_db
+            name: db-volume
+          ports:
+            - containerPort: {{ .Values.backend.service.internalPort }}
+          livenessProbe:
+            httpGet:
+              path: /api/test
+              port: {{ .Values.backend.service.internalPort }}
+          readinessProbe:
+            httpGet:
+              path: /api
+              port: {{ .Values.backend.service.internalPort }}
+          resources:
+{{ toYaml .Values.backend.resources | indent 12 }}
+      volumes:
+      - name: db-volume
+        emptyDir: {}
+    {{- if .Values.backend.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.backend.nodeSelector | indent 8 }}
+    {{- end }}
