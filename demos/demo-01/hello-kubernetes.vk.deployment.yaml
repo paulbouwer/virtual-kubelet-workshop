@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-kubernetes-virtualkubelet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello-kubernetes-virtualkubelet
+  template:
+    metadata:
+      labels:
+        app: hello-kubernetes-virtualkubelet
+    spec:
+      containers:
+      - name: hello-kubernetes
+        image: paulbouwer/hello-kubernetes:1.5  
+        resources:
+          requests:
+            memory: 1G
+            cpu: 1 
+        ports:
+        - containerPort: 80
+        env:
+        - name: PORT
+          value: "80"
+      nodeSelector:
+        kubernetes.io/hostname: <VIRTUALKUBELET_NODE>
+      tolerations:
+      - key: azure.com/aci
+        effect: NoSchedule
