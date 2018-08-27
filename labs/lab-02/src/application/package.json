@@ -1,0 +1,19 @@
+{
+  "name": "vk-burst-app",
+  "version": "1.0.0",
+  "description": "Virtual Kubelet burst scenario.",
+  "author": "Paul Bouwer",
+  "license": "MIT",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "azure-storage": "^2.10.1",
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3",
+    "express-handlebars": "^3.0.0",
+    "morgan": "^1.9.0",
+    "mysql2": "^1.6.1"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "vk-burst-worker",
+  "version": "1.0.0",
+  "description": "Virtual Kubelet burst scenario.",
+  "author": "Paul Bouwer",
+  "license": "MIT",
+  "main": "worker.js",
+  "scripts": {
+    "start": "node worker.js"
+  },
+  "dependencies": {
+    "azure-storage": "^2.10.1",
+    "mysql2": "^1.6.1"
+  }
+}
