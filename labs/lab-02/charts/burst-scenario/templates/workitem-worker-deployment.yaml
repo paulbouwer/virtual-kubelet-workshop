@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fullname" . }}-worker
+  labels:
+    app: {{ template "name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.worker.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "fullname" . }}-worker
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "fullname" . }}-worker
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ include "fullname" . }}-worker
+          image: "{{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}"
+          imagePullPolicy: "{{ .Values.worker.image.pullPolicy }}"
+          env:
+          - name: MYSQL_HOST
+            value: "{{ .Values.mysql.host }}"
+          - name: MYSQL_USER
+            value: "{{ .Values.mysql.user }}"
+          - name: MYSQL_PASSWORD
+            value: "{{ .Values.mysql.password }}"
+          - name: WORKITEM_TABLE
+            value: "{{ .Values.mysql.workItems.table }}"
+          - name: AZURE_STORAGE_ACCOUNT
+            value: "{{ .Values.azureStorage.account }}"
+          - name: AZURE_STORAGE_ACCESS_KEY
+            value: "{{ .Values.azureStorage.accessKey }}"
+          - name: WORKITEM_QUEUE
+            value: "{{ .Values.azureStorage.workItems.queue }}"
+          - name: COMPUTE_TIME_IN_SECONDS
+            value: "{{ .Values.worker.computeTimeInSeconds }}"

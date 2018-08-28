@@ -1,0 +1,4 @@
+apiVersion: v1
+description: Virtual Kubelet burst scenario
+name: burst-scenario
+version: 1.0.0

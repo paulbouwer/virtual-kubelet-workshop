@@ -74,7 +74,7 @@ If you would like to explore this option and don't have Helm's Tiller installed,
 This command will install the Virtual Kubelet into the `virtual-kubelet` namespace we created earlier. It will create a Linux node and leverage the azure (Azure Container Instances) provider.
 
 ```bash
-helm install "charts/virtual-kubelet" --name "linux-aci" --kube-version "1.10" --namespace "virtual-kubelet" \
+helm install "charts/virtual-kubelet" --name "linux-aci" --namespace "virtual-kubelet" \
   --set provider=azure \
   --set nodeName=virtual-kubelet-linux-aci \
   --set nodeOsType=Linux \
@@ -144,6 +144,13 @@ kubectl describe node virtual-kubelet-linux-aci
 ```
 
 ## Deploy workload to node backed by Virtual Kubelet
+
+Now that you have installed the Virtual Kubelet, you will need to clone the Virtual Kubelet Workshop repo:
+
+```bash
+git clone https://github.com/paulbouwer/virtual-kubelet-workshop.git
+cd virtual-kubelet-workshop/labs/lab-01
+```
 
 Create a namespace for this lab for the workload we will be deploying.
 

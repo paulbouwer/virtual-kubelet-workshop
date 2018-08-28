@@ -1,7 +1,9 @@
+host = window.location.origin;
+
 function getWorkItemInfo() {
   $.ajax({
     type: "GET",
-    url: "http://localhost:8080/workitems"
+    url: host + "/workitems"
   }).then(function(data) {
     $('.workitem-total').html(data.total);
     $('.workitem-totalProcessed').html(data.totalProcessed);
@@ -15,7 +17,7 @@ function resetWorkItems() {
   $("#resetButton").prop('disabled', true);
   $.ajax({
     type: "POST",
-    url: "http://localhost:8080/reset"
+    url: host + "/reset"
   }).done(function(data) {
     $("#resetButton").prop('disabled', false);
   });

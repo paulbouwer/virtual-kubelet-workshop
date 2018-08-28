@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fullname" . }}-app
+  labels:
+    app: {{ template "name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.application.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "fullname" . }}-app
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "fullname" . }}-app
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ include "fullname" . }}-app
+          image: "{{ .Values.application.image.repository }}:{{ .Values.application.image.tag }}"
+          imagePullPolicy: "{{ .Values.application.image.pullPolicy }}"
+          env:
+          - name: MYSQL_HOST
+            value: "{{ .Values.mysql.host }}"
+          - name: MYSQL_USER
+            value: "{{ .Values.mysql.user }}"
+          - name: MYSQL_PASSWORD
+            value: "{{ .Values.mysql.password }}"
+          - name: WORKITEM_TABLE
+            value: "{{ .Values.mysql.workItems.table }}"
+          - name: AZURE_STORAGE_ACCOUNT
+            value: "{{ .Values.azureStorage.account }}"
+          - name: AZURE_STORAGE_ACCESS_KEY
+            value: "{{ .Values.azureStorage.accessKey }}"
+          - name: WORKITEM_QUEUE
+            value: "{{ .Values.azureStorage.workItems.queue }}"
+          - name: NO_OF_WORKITEMS
+            value: "{{ .Values.azureStorage.workItems.count }}"

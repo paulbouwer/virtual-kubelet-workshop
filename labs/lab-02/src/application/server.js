@@ -28,14 +28,16 @@ var workitemTable = process.env.WORKITEM_TABLE;
 var mysql = require('mysql2');
 var config =
 {
-  host      : mySQLHost,
-  user      : mySQLUser,
-  password  : mySQLPassword,
-  database  : mySQLDatabase,
-  port      : 3306,
-  ssl       : true
+  host            : mySQLHost,
+  user            : mySQLUser,
+  password        : mySQLPassword,
+  database        : mySQLDatabase,
+  port            : 3306,
+  ssl             : true,
+  connectionLimit : 5
 };
-var mysqlConnection = mysql.createConnection(config);
+//var mysqlConnection = mysql.createConnection(config);
+var mysqlConnection = mysql.createPool(config);
 
 // Set up Azure Storage connection
 var azureStorage = require('azure-storage');

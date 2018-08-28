@@ -1,0 +1,39 @@
+# resources
+mysql:
+  host:
+  user:
+  password:
+  workItems:
+    table: workitems
+
+azureStorage:
+  account:
+  accessKey:
+  workItems:
+    queue: workitems
+    count: 400
+
+# application
+application:
+  service:
+    type: NodePort
+    port: 80
+    targetPort: 8080
+    name: http
+  replicaCount: 1
+  image:
+    repository: paulbouwer/vk-burst-app
+    tag: "1.0"
+    pullPolicy: Always
+
+# worker
+worker:
+  computeTimeInSeconds: 2
+  replicaCount: 1
+  image:
+    repository: paulbouwer/vk-burst-worker
+    tag: "1.0"
+    pullPolicy: Always
+  virtualKubelet:
+    replicaCount: 0
+    nodeName: virtual-kubelet-linux-aci
