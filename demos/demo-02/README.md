@@ -61,7 +61,7 @@ kubectl create namespace virtual-kubelet
 If Tiller is installed in the cluster, we can use the following:
 
 ```bash
-helm install "charts/virtual-kubelet" --name "linux-aci" --kube-version "1.11" --namespace "virtual-kubelet" \
+helm install "charts/virtual-kubelet" --name "linux-aci" --namespace "virtual-kubelet" \
   --set provider=azure \
   --set nodeName=virtual-kubelet-linux-aci \
   --set nodeOsType=Linux \
@@ -130,5 +130,5 @@ kubectl get deployments,pods -o wide -n demo02
 Show the resources backed in ACI.
 
 ```bash
-az container list -o table
+az container list -g ContainerCampUK-ACI -o table
 ```
