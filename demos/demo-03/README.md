@@ -34,13 +34,13 @@ Assign two DNS A records for the external ip address just created, with the foll
 Create a Kubernetes namespace for the demo.
 
 ```bash
-kubectl create ns demo02
+kubectl create ns demo03
 ```
 
-Install the demo via the Helm Chart into the `demo02` namespace. Replace `DOMAIN_NAME` and `VIRTUALKUBELET_NODE_NAME` with the values for your environment.
+Install the demo via the Helm Chart into the `demo03` namespace. Replace `DOMAIN_NAME` and `VIRTUALKUBELET_NODE_NAME` with the values for your environment.
 
 ```bash
-helm install charts/facerecognizer-demo --name demo --namespace demo02 \
+helm install charts/facerecognizer-demo --name demo --namespace demo03 \
   --set imageRecognizer.virtualKubelet.nodeName=VIRTUALKUBELET_NODE_NAME \
   --set frontend.ingress.hosts={virtualkubelet-burst-demo.DOMAIN_NAME} \
   --set backend.ingress.hosts={virtualkubelet-burst-demo-backend.DOMAIN_NAME}
@@ -52,10 +52,10 @@ helm install charts/facerecognizer-demo --name demo --namespace demo02 \
 > 
 > Have diagram in deck
 
-Show the components running in the `demo02` namespace.
+Show the components running in the `demo03` namespace.
 
 ```bash
-kubectl get ingress,svc,deployment,pod -n demo02
+kubectl get ingress,svc,deployment,pod -n demo03
 ```
 
 Show the UI and reset the database to start processing again. Show that after around a minute, we cap out at processing around 1 image per second.
@@ -65,14 +65,14 @@ Show the UI and reset the database to start processing again. Show that after ar
 Demonstrate that the aci burst deployment has 0 instances:
 
 ```bash 
-kubectl get deployment demo-face-recognizer-ir-aci -n demo02
+kubectl get deployment demo-face-recognizer-ir-aci -n demo03
 ```
 
 Scale up the deployment to 10 instances and have a look at the 10 instances spun up
 
 ```bash
-kubectl scale deploy demo-face-recognizer-ir-aci --replicas 10 -n demo02
-kubectl get pods -n demo02
+kubectl scale deploy demo-face-recognizer-ir-aci --replicas 10 -n demo03
+kubectl get pods -n demo03
 ```
 
 You should see these start to provision in Azure Container Instances:
@@ -84,7 +84,7 @@ az container list --query "[].name" | fgrep demo-face-recognizer-ir-aci
 Wait until the pods transition to a `Running` state:
 
 ```bash
-kubectl get pods -n demo02 -w
+kubectl get pods -n demo03 -w
 ```
 
 Show the UI again and notice that the processing rate has increased substantially.
@@ -92,13 +92,13 @@ Show the UI again and notice that the processing rate has increased substantiall
 Once the image processing is complete, then scale the burst workload back to 0.
 
 ```bash
-kubectl scale deploy demo-face-recognizer-ir-aci --replicas 10 -n demo02
+kubectl scale deploy demo-face-recognizer-ir-aci --replicas 10 -n demo03
 ```
 
 Wait until the pods have been removed:
 
 ```bash
-kubectl get pods -n demo02 -w
+kubectl get pods -n demo03 -w
 ```
 
 You should no longer see any pods running in Azure Container Instances:

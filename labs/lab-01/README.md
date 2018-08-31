@@ -14,7 +14,7 @@
 
 ## Overview
 
-This lab will guide you through installing the Virtual Kubelet in your local Kubernetes cluster. We will configure the Virtual Kubelet with the azure (Azure Container Instances) provider.
+This lab will guide you through installing the Virtual Kubelet in your local Kubernetes cluster. You will configure the Virtual Kubelet with the azure (Azure Container Instances) provider.
 
 ## Set up
 

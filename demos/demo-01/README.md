@@ -64,7 +64,7 @@ In addition to ensuring resource management in a cluster, the resource request l
 Deploy the example workload.
 
 ```bash
-kubectl create -f hello-kubernetes.deployment.yaml -n demo01
+kubectl create -f hello-kubernetes.vk.deployment.yaml -n demo01
 ```
 
 Notice that the workload is deployed onto the Virtual Kubelet node and also has an ip address not out of the same pool as the other workloads. The ACI backed pod has been given a public ip address. Talk to no VNET access currently via ACI.
