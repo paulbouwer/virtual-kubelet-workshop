@@ -2,7 +2,15 @@
 
 RESOURCE_GROUP=ContainerCampUK
 LOCATION=WestEurope
-NUMBER_ATTENDEES=25
+NUMBER_ATTENDEES=0
+
+if [ $# -lt 1 ];
+then
+  echo "You need to specify the number of attendees"
+  exit
+else
+  NUMBER_ATTENDEES=$1
+fi
 
 # create resource group
 az group create -n $RESOURCE_GROUP -l $LOCATION
