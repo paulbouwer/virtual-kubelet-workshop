@@ -149,13 +149,13 @@ If you have a look at the Virtual Kubelet burst deployment `lab02-burst-scenario
 kubectl get deployment lab02-burst-scenario-worker-vk-aci -n lab02
 ```
 
-To add additional processing capacity, you will now scale up the deployment to 10 instances.
+To add additional processing capacity, you will now scale up the deployment to 3  instances.
 
 ```bash
-kubectl scale deploy lab02-burst-scenario-worker-vk-aci --replicas 10 -n lab02
+kubectl scale deploy lab02-burst-scenario-worker-vk-aci --replicas 3 -n lab02
 ```
 
-Have a look at the 10 instances spinning up.
+Have a look at the 3 instances spinning up.
 
 ```bash
 kubectl get pods -n lab02
