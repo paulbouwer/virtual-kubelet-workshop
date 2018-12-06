@@ -22,10 +22,15 @@ This is a great example of leveraging the Virtual Kubelet to add a burst capabil
 
 ## Set up
 
-Ensure that you have the Virtual Kubelet Workshop repo cloned as you will be using it for this lab. If you didn't clone this repo as part of Lab 1, then do the following:
+Ensure that you have a local copy of the Virtual Kubelet Workshop repo as you will be using it for this lab. If you didn't get this repo as part of Lab 1, then do the following:
 
 ```bash
+# option 1 - git clone
 git clone https://github.com/paulbouwer/virtual-kubelet-workshop.git
+
+# option 2 - curl
+curl -sL "https://github.com/paulbouwer/virtual-kubelet-workshop/archive/master.tar.gz" | tar -zx && mv virtual-kubelet-workshop-master virtual-kubelet-workshop
+
 cd virtual-kubelet-workshop/labs/lab-02
 ```
 
@@ -61,6 +66,7 @@ If you would like to explore this option and don't have Helm's Tiller installed,
 This command will install the Burst Scenario workloads into the `lab02` namespace we created earlier. You can specify the config values by using the `--set` command line options.
 
 ```bash
+# option 1
 helm install "charts/burst-scenario" --name "lab02" --namespace "lab02" \
   --set mysql.host= \
   --set mysql.user= \
@@ -74,6 +80,7 @@ helm install "charts/burst-scenario" --name "lab02" --namespace "lab02" \
 You can also chose to set these config values by updating the `charts/burst-scenario/values.yaml` file. The following simpler command can then be leveraged to install the Burst Scenario workloads into the `lab02` namespace we created earlier.
 
 ```bash
+# option 2
 helm install "charts/burst-scenario" --name "lab02" --namespace "lab02"
 ```
 
@@ -84,6 +91,7 @@ If you don't want to install Helm Tiller in your cluster, then use this method.
 This command will install the Burst Scenario workloads into the `lab02` namespace we created earlier. It uses the `helm template` command to render the Chart into a static yaml file `lab02-burst-scenario.yaml`. You can specify the config values by using the `--set` command line options.
 
 ```bash
+# option 1
 helm template "charts/burst-scenario" --name "lab02" --kube-version "1.10" --namespace "lab02" \
   --set mysql.host= \
   --set mysql.user= \
@@ -98,6 +106,7 @@ helm template "charts/burst-scenario" --name "lab02" --kube-version "1.10" --nam
 You can also chose to set these config values by updating the `charts/burst-scenario/values.yaml` file. The following simpler command can then be leveraged to render the Burst Scenario workloads yaml.
 
 ```bash
+# option 2
 helm template "charts/burst-scenario" --name "lab02" --kube-version "1.10" --namespace "lab02" > lab02-burst-scenario.yaml
 ```
 
@@ -158,13 +167,13 @@ kubectl scale deploy lab02-burst-scenario-worker-vk-aci --replicas 3 -n lab02
 Have a look at the 3 instances spinning up.
 
 ```bash
-kubectl get pods -n lab02
+kubectl get pods -n lab02 -o wide
 ```
 
 It will be easier to add a `watch` to the previous command. the Wait until the first of the pods transition to a `Running` state:
 
 ```bash
-kubectl get pods -n lab02 -w
+kubectl get pods -n lab02 -o wide -w
 ```
 
 Have a look at the logs of the pods running in the Virtual Kubelet to ensure that they are processing as expected.
@@ -184,7 +193,7 @@ kubectl scale deploy lab02-burst-scenario-worker-vk-aci --replicas 0 -n lab02
 Wait until the pods have been removed:
 
 ```bash
-kubectl get pods -n lab02 -w
+kubectl get pods -n lab02 -o wide -w
 ```
 
 You have successfully added burst capacity to your worker pool in this lab via the Virtual Kubelet and the azure (Azure Container Instances) provider. You only pay for these resources by the second and do not need to spin up additional VM based nodes for this burst capability.
@@ -205,7 +214,7 @@ You can clean up the resources in this lab as follows:
 
 ```bash
 # if you used 'helm install'
-helm del --purge "lab02"
+helm del "lab02" --purge 
 
 # if you used 'helm template' and 'kubectl create'
 kubectl delete -f lab02-burst-scenario.yaml -n lab02

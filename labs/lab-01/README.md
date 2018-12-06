@@ -18,10 +18,15 @@ This lab will guide you through installing the Virtual Kubelet in your local Kub
 
 ## Set up
 
-First let's clone the Virtual Kubelet repo:
+First let's obtain the Virtual Kubelet repo:
 
 ```bash
+# option 1 - git clone
 git clone https://github.com/virtual-kubelet/virtual-kubelet.git
+
+# option 2 - curl
+curl -sL "https://github.com/virtual-kubelet/virtual-kubelet/archive/master.tar.gz" | tar -zx && mv virtual-kubelet-master virtual-kubelet
+
 cd virtual-kubelet
 ```
 
@@ -74,11 +79,10 @@ If you would like to explore this option and don't have Helm's Tiller installed,
 This command will install the Virtual Kubelet into the `virtual-kubelet` namespace we created earlier. It will create a Linux node and leverage the azure (Azure Container Instances) provider.
 
 ```bash
-helm install "charts/virtual-kubelet" --name "linux-aci" --namespace "virtual-kubelet" \
+helm install "charts/virtual-kubelet" --name "aci-linux" --namespace "virtual-kubelet" \
   --set provider=azure \
-  --set nodeName=virtual-kubelet-linux-aci \
+  --set nodeName=virtual-kubelet-aci-linux \
   --set nodeOsType=Linux \
-  --set rbac.install=true \
   --set providers.azure.targetAKS=false \
   --set providers.azure.tenantId=$AZURE_TENANT_ID \
   --set providers.azure.subscriptionId=$AZURE_SUBSCRIPTION_ID \
@@ -97,11 +101,10 @@ If you don't want to install Helm Tiller in your cluster, then use this method.
 This command will install the Virtual Kubelet into the `virtual-kubelet` namespace we created earlier. It uses the `helm template` command to render the Chart into a static yaml file `virtual-kubelet-linux-aci.yaml`. You can then use `kubectl create` to deploy the yaml into your cluster.
 
 ```bash
-helm template "charts/virtual-kubelet" --name "linux-aci" --kube-version "1.10" --namespace "virtual-kubelet" \
+helm template "charts/virtual-kubelet" --name "aci-linux" --kube-version "1.10" --namespace "virtual-kubelet" \
   --set provider=azure \
-  --set nodeName=virtual-kubelet-linux-aci \
+  --set nodeName=virtual-kubelet-aci-linux \
   --set nodeOsType=Linux \
-  --set rbac.install=true \
   --set providers.azure.targetAKS=false \
   --set providers.azure.tenantId=$AZURE_TENANT_ID \
   --set providers.azure.subscriptionId=$AZURE_SUBSCRIPTION_ID \
@@ -111,7 +114,7 @@ helm template "charts/virtual-kubelet" --name "linux-aci" --kube-version "1.10" 
   --set providers.azure.aciRegion=$ACI_REGION \
   --set apiserverCert=$cert \
   --set apiserverKey=$key \
->> virtual-kubelet-linux-aci.yaml
+> virtual-kubelet-linux-aci.yaml
 
 kubectl create -f virtual-kubelet.yaml -n virtual-kubelet
 ```
@@ -140,15 +143,20 @@ kubectl get nodes
 Have a look at the details of the Virtual Kubelet node. Inspect and ensure you understand the values of the labels, taints, conditions and capacity sections.
 
 ```bash
-kubectl describe node virtual-kubelet-linux-aci
+kubectl describe node virtual-kubelet-aci-linux
 ```
 
 ## Deploy workload to node backed by Virtual Kubelet
 
-Now that you have installed the Virtual Kubelet, you will need to clone the Virtual Kubelet Workshop repo:
+Now that you have installed the Virtual Kubelet, you will need to obtain the Virtual Kubelet Workshop repo:
 
 ```bash
+# option 1 - git clone
 git clone https://github.com/paulbouwer/virtual-kubelet-workshop.git
+
+# option 2 - curl
+curl -sL "https://github.com/paulbouwer/virtual-kubelet-workshop/archive/master.tar.gz" | tar -zx && mv virtual-kubelet-workshop-master virtual-kubelet-workshop
+
 cd virtual-kubelet-workshop/labs/lab-01
 ```
 
@@ -177,9 +185,19 @@ Once the `hello-kubernetes-*` pod is in a `Running` state, browse to the pod's I
 Get details of the node. You will see the pod has been scheduled onto this virtual node. Pay close attention to the `Non-terminated Pods` and `Allocated resources` sections.
 
 ```bash
-kubectl describe node virtual-kubelet-linux-aci
+kubectl describe node virtual-kubelet-aci-linux
 ```
+
+The pod is exposed on a public ip via Azure Container Instances. You can obtain this ip and browse to it in your browser.
+
+```bash
+kubectl get pods -o wide -n lab01
+```
+
+The resource backed by Virtual Kubelet is not joined to the same network as your Kubernetes cluster, hence you are seeing a public ip address for your pod.
+
+Some of the Virtual Kubelet cloud providers provide a mechanism to join the private network of the Kubernetes cluster to the private network of the provider resource (e.g. Azure Container Instances). This flexibility allows you choice in how you would like to configure your Virtual Kubelet for different scenarios and workloads.
 
 ## Additional
 
-You can deploy multiple Virtual Kubelets into your cluster. Explore how to add another into your cluster. Ensure you configure it with a different node name to the one you just deployed. Change the yaml of the workload you deployed earlier to target this new Virtual Kubelet node.
+You can deploy multiple Virtual Kubelets into your cluster. Explore how to add another into your cluster. Ensure you configure it with a different node name and/or taints to the one you just deployed. Change the yaml of the workload you deployed earlier to target this new Virtual Kubelet node.

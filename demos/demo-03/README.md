@@ -1,114 +1,160 @@
 # Demo 3 - Burst workload with the Virtual Kubelet
 
+## Requirements
+
+An AKS cluster with virtual node installed as per: https://docs.microsoft.com/en-us/azure/aks/virtual-nodes-cli
+
+Client binaries:
+- az cli
+- kubectl
+
+Ensure that `helm repo update` has been run.
+
+This demo is based on the `Virtual Node Autoscale` demo at:
+- https://github.com/Azure-Samples/virtual-node-autoscale
+
 ## Setup
 
-> **Requirements**
->
-> An AKS cluster with Virtual Kubelet installed as per: https://docs.microsoft.com/en-us/azure/aks/virtual-kubelet
->
-> Client binaries:
-> - az cli
-> - kubectl
-> - helm
-
-This demo is based on the `vk-burst-demo` demo at:
-- https://github.com/rbitia/aci-demos
-
-Install the nginx ingress controller.
+Pull down the `Virtual Node Autoscale` demo repo:
 
 ```bash
-helm install stable/nginx-ingress --name ingress --namespace kube-system
+# option 1 - git clone
+git clone https://github.com/Azure-Samples/virtual-node-autoscale.git
+ 
+# option 2 - curl
+curl -sL "https://github.com/Azure-Samples/virtual-node-autoscale/archive/master.tar.gz" | tar -zx && mv virtual-node-autoscale-master virtual-node-autoscale
+ 
+cd virtual-node-autoscale
 ```
 
-Wait until the external ip has been created for the nginx ingress.
+### Virtual Node Admission Controller
+
+Install the Virtual Node admission-controller.
 
 ```bash
-kubectl get service ingress-nginx-ingress-controller --namespace kube-system --watch
+helm install --name vn-affinity --namespace kube-system ./charts/vn-affinity-admission-controller
 ```
 
-Assign two DNS A records for the external ip address just created, with the following entries for the `DOMAIN_NAME` being used:
-
-- `virtualkubelet-burst-demo.DOMAIN_NAME`
-- `virtualkubelet-burst-demo-backend.DOMAIN_NAME`
-
-Create a Kubernetes namespace for the demo.
+Create the `demo03` namespace in the AKS cluster and label it for the admission controller.
 
 ```bash
-kubectl create ns demo03
+kubectl create namespace demo03
+kubectl label namespace demo03 vn-affinity-injection=enabled
 ```
 
-Install the demo via the Helm Chart into the `demo03` namespace. Replace `DOMAIN_NAME` and `VIRTUALKUBELET_NODE_NAME` with the values for your environment.
+### Prometheus
+
+Install the Prometheus Operator.
 
 ```bash
-helm install charts/facerecognizer-demo --name demo --namespace demo03 \
-  --set imageRecognizer.virtualKubelet.nodeName=VIRTUALKUBELET_NODE_NAME \
-  --set frontend.ingress.hosts={virtualkubelet-burst-demo.DOMAIN_NAME} \
-  --set backend.ingress.hosts={virtualkubelet-burst-demo-backend.DOMAIN_NAME}
+curl -sL https://raw.githubusercontent.com/coreos/prometheus-operator/master/bundle.yaml -o prometheus-operator.yaml
+sed -i 's/namespace\: default/namespace\: demo03/g' prometheus-operator.yaml
+kubectl apply -f prometheus-operator.yaml -n demo03
 ```
 
-## Demonstrate normal running
-
-> TODO
-> 
-> Have diagram in deck
-
-Show the components running in the `demo03` namespace.
+Create a Prometheus instance.
 
 ```bash
-kubectl get ingress,svc,deployment,pod -n demo03
+sed -i 's/namespace\: default/namespace\: demo03/g' online-store/prometheus-config/prometheus/prometheus-cluster-role-binding.yaml
+kubectl apply -f online-store/prometheus-config/prometheus -n demo03
 ```
 
-Show the UI and reset the database to start processing again. Show that after around a minute, we cap out at processing around 1 image per second.
-
-## Burst into Azure Container Instances with the Virtual Kubelet
-
-Demonstrate that the aci burst deployment has 0 instances:
-
-```bash 
-kubectl get deployment demo-face-recognizer-ir-aci -n demo03
-```
-
-Scale up the deployment to 10 instances and have a look at the 10 instances spun up
+Expose a service for Prometheus instance.
 
 ```bash
-kubectl scale deploy demo-face-recognizer-ir-aci --replicas 10 -n demo03
-kubectl get pods -n demo03
+kubectl expose pod prometheus-prometheus-0 -n demo03 --port 9090 --target-port 9090
 ```
 
-You should see these start to provision in Azure Container Instances:
+### Install Application
+
+Export the Virtual Node name.
 
 ```bash
-az container list --query "[].name" | fgrep demo-face-recognizer-ir-aci
+export VK_NODE_NAME=virtual-node-aci-linux
+
+sed -i 's/\.Values\.service\.type/\.Values\.app\.service\.type/g' charts/online-store/templates/NOTES.txt
+sed -i 's/\.Values\.service\.port/\.Values\.app\.service\.port/g' charts/online-store/templates/NOTES.txt
+
+helm install ./charts/online-store --name online-store --set counter.specialNodeName=$VK_NODE_NAME,app.ingress.enabled=false,app.service.type=LoadBalancer,appInsight.enabled=false --namespace demo03
 ```
 
-Wait until the pods transition to a `Running` state:
+### Deploy Prometheus Adapter
+
+TODO 
+sed to replace url and fix custom rule - remove '
 
 ```bash
-kubectl get pods -n demo03 -w
+sed -i 's/default\.svc/demo03\.svc/g' online-store/prometheus-config/prometheus-adapter/values.yaml
+sed -i 's/'"'"'round(avg/round(avg/g' ./online-store/prometheus-config/prometheus-adapter/values.yaml
+sed -i 's/\.GroupBy>>))'"'"'/\.GroupBy>>))/g' ./online-store/prometheus-config/prometheus-adapter/values.yaml
+
+helm install stable/prometheus-adapter --name prometheus-adaptor -f ./online-store/prometheus-config/prometheus-adapter/values.yaml --namespace demo03
 ```
 
-Show the UI again and notice that the processing rate has increased substantially.
-
-Once the image processing is complete, then scale the burst workload back to 0.
+### Deploy Grafana Dashboard
 
 ```bash
-kubectl scale deploy demo-face-recognizer-ir-aci --replicas 10 -n demo03
+helm install stable/grafana --name grafana -f grafana/values.yaml --namespace demo03
 ```
 
-Wait until the pods have been removed:
-
 ```bash
-kubectl get pods -n demo03 -w
+# password
+kubectl get secret --namespace demo03 grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+
+# pod
+export GRAFANA_POD=$(kubectl get pods --namespace demo03 -l "app=grafana" -o jsonpath="{.items[0].metadata.name}")
+kubectl --namespace demo03 port-forward $GRAFANA_POD 3000
 ```
 
-You should no longer see any pods running in Azure Container Instances:
+---
+
+## Discuss Application
+
+Show store application
 
 ```bash
-az container list --query "[].name" | fgrep demo-face-recognizer-ir-aci
+export EXTERNAL_IP=$(kubectl get service online-store -n demo03 -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+browse to http://$EXTERNAL_IP
 ```
 
-## Clean up
+Show Grafana dashboard
 
 ```bash
-helm del --purge demo
+http://localhost:3000
+```
+
+Show pods running the online store
+
+```bash
+kubectl get pods -o wide -l app=online-store
+```
+
+Show Container Instances
+
+```bash
+az container list -o table
+```
+
+## Run load
+
+Fire up the load tester binary.
+
+```bash
+docker run --rm -it rakyll/hey:0.1.1 -n 10 -c 10 -z 20m http://$EXTERNAL_IP
+```
+
+Show the Grafana dashboard and the increased requests per second. Keep an eye on the number of pods on the Node and in ACI.
+
+Once the pods scale, have a look at the number of pods.
+
+```bash
+kubectl get pods -o wide -l app=online-store
+az container list -o table
+```
+
+After some time, kill the load tester and look at the number of pods again. This should come down and all ACI instances should be deleted.
+
+```bash
+kubectl get pods -o wide -l app=online-store
+az container list -o table
 ```

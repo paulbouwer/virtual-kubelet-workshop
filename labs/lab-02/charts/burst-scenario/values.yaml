@@ -36,4 +36,4 @@ worker:
     pullPolicy: Always
   virtualKubelet:
     replicaCount: 0
-    nodeName: virtual-kubelet-linux-aci
+    nodeName: virtual-kubelet-aci-linux

@@ -15,3 +15,16 @@ This is a great example of leveraging the Virtual Kubelet to add a burst capabil
 ## Lab 3 (Bonus) - Explore other Virtual Kubelet providers
 
 Explore the other available Virtual Kubelet providers.
+
+## Cleanup
+
+Run the following commands to clean up your local Kubernetes cluster:
+
+```bash
+helm del "lab02" --purge
+kubectl delete namespace lab01
+kubectl delete namespace lab02
+helm del aci-linux --purge
+kubectl delete namespace virtual-kubelet
+kubectl delete node virtual-kubelet-aci-linux
+```

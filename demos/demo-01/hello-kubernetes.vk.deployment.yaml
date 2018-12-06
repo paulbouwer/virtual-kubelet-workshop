@@ -16,16 +16,22 @@ spec:
       - name: hello-kubernetes
         image: paulbouwer/hello-kubernetes:1.5  
         resources:
+          limits:
+            memory: "0.5G"
+            cpu: "0.5"
           requests:
-            memory: 1G
-            cpu: 1 
+            memory: "0.5G"
+            cpu: "0.5"
         ports:
         - containerPort: 80
         env:
         - name: PORT
           value: "80"
       nodeSelector:
-        kubernetes.io/hostname: <VIRTUALKUBELET_NODE>
+        kubernetes.io/role: agent
+        beta.kubernetes.io/os: linux
+        type: virtual-kubelet
       tolerations:
-      - key: azure.com/aci
+      - key: virtual-kubelet.io/provider
+        value: azure
         effect: NoSchedule

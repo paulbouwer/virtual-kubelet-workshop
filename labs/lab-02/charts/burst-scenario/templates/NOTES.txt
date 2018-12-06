@@ -4,10 +4,10 @@ You can reach the application at the following URL:
   Docker for Windows/Mac
   ----------------------
   export PORT=$(kubectl get service {{ template "fullname" . }}-app --namespace {{ .Release.Namespace }} -o jsonpath='{.spec.ports[0].nodePort}')
-  http://host.docker.internal:$PORT
+  echo http://host.docker.internal:$PORT
 
   Minikube
   --------
   export IP=$(kubectl get service {{ template "fullname" . }}-app --namespace {{ .Release.Namespace }} -o jsonpath='{.spec.clusterIP}')
   export PORT=$(kubectl get service {{ template "fullname" . }}-app --namespace {{ .Release.Namespace }} -o jsonpath='{.spec.ports[0].nodePort}')
-  http://$IP:$PORT
+  echo http://$IP:$PORT
