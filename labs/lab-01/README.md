@@ -116,7 +116,7 @@ helm template "charts/virtual-kubelet" --name "aci-linux" --kube-version "1.10" 
   --set apiserverKey=$key \
 > virtual-kubelet-linux-aci.yaml
 
-kubectl create -f virtual-kubelet.yaml -n virtual-kubelet
+kubectl create -f virtual-kubelet-linux-aci.yaml -n virtual-kubelet
 ```
 
 ### Validation
